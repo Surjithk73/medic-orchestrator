@@ -1,0 +1,43 @@
+# Secrets — NEVER COMMIT
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+venv/
+.venv/
+env/
+.env.local
+
+# Next.js / Node
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.env.local
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LangSmith / Langchain cache
+.langchain.db
+
+# Misc
+*.log
+*.tmp
+_tmp_*.json
