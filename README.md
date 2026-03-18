@@ -298,3 +298,6 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **⚠️ Disclaimer:** This tool is for research purposes only. Always consult qualified professionals for medical and regulatory decisions.
+
+## Contributors
+Thanks to all contributors!
