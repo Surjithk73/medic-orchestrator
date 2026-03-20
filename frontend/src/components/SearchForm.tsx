@@ -59,17 +59,21 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
         </div>
       </form>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm text-zinc-500">
-        <span>Popular:</span>
-        {['Ketamine', 'Thalidomide', 'Sildenafil'].map(term => (
-          <button 
-            key={term} 
-            onClick={() => setMolecule(term)}
-            className="px-3 py-1 rounded-full bg-zinc-800/50 hover:bg-zinc-800 hover:text-zinc-300 transition-colors border border-zinc-700/50"
-          >
-            {term}
-          </button>
-        ))}
+      <div className="mt-6 space-y-2">
+        <p className="text-center text-sm text-zinc-400">
+          Pre-analyzed molecules cached for instant access:
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+          {['Metformin', 'Ibuprofen', 'Thalidomide'].map(term => (
+            <button 
+              key={term} 
+              onClick={() => setMolecule(term)}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-zinc-300 hover:text-white transition-all border border-indigo-500/30 hover:border-indigo-400/50 font-medium"
+            >
+              {term} ⚡
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
