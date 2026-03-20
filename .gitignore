@@ -54,3 +54,11 @@ llm_*.txt
 
 # Temporary reports
 tmp_reports/
+
+# Internal documentation (not for public repo)
+PRESENTATION_SCRIPT.md
+PITCH_DECK_CONTENT.md
+DOCUMENTATION.md
+DATA_SOURCES.md
+CACHING.md
+SSE_IMPLEMENTATION.md
