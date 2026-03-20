@@ -41,3 +41,16 @@ Thumbs.db
 *.log
 *.tmp
 _tmp_*.json
+
+# Scripts and test files
+*.ps1
+*.sh
+test_*.py
+test_*.txt
+*_err.txt
+*_result.txt
+clean_server.txt
+llm_*.txt
+
+# Temporary reports
+tmp_reports/
