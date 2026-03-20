@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
 
+// API base URL configuration
+const API_BASE_URL = 
+  process.env.NEXT_PUBLIC_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? 'https://your-backend-url.com' // Replace with your deployed backend URL
+    : 'http://localhost:8000');
+
 // Type describing the status payloads flowing from the backend
 export interface AgentProgressEvent {
   domain: string;
@@ -15,7 +22,7 @@ export function useSSE(sessionId: string | null) {
     if (!sessionId) return;
 
     // Connect to FastAPI SSE endpoint
-    const evtSource = new EventSource(`http://localhost:8000/api/research/stream/${sessionId}`);
+    const evtSource = new EventSource(`${API_BASE_URL}/api/research/stream/${sessionId}`);
 
     evtSource.onmessage = (e) => {
       try {

@@ -268,6 +268,12 @@ npm i -g vercel
 vercel
 ```
 
+**Important:** Set the `NEXT_PUBLIC_API_URL` environment variable in Vercel to point to your deployed backend:
+
+```
+NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
+```
+
 The `vercel.json` configuration automatically builds the Next.js frontend from the `frontend/` directory.
 
 ### Backend (Separate Hosting)

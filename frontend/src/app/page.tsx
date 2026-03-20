@@ -5,6 +5,7 @@ import SearchForm from "@/components/SearchForm";
 import ProgressViewer from "@/components/ProgressViewer";
 import ReportViewer from "@/components/ReportViewer";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export default function Home() {
     
     try {
       // 1. Trigger backend orchestrator 
-      const res = await fetch("http://localhost:8000/api/research/start", {
+      const res = await fetch(`${API_BASE_URL}/api/research/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ molecule: query })
@@ -30,7 +31,7 @@ export default function Home() {
       // 2. Poll for the final report every 5 seconds
       const pollReport = async () => {
         try {
-          const reportRes = await fetch(`http://localhost:8000/api/report/${newSessionId}`);
+          const reportRes = await fetch(`${API_BASE_URL}/api/report/${newSessionId}`);
           if (reportRes.ok) {
             // Document is ready
             setMode("report");

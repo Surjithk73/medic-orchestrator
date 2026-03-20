@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
 
 interface RepurposingOpportunity {
   target_indication: string;
@@ -22,7 +23,7 @@ export default function ReportViewer({ sessionId }: { sessionId: string }) {
   const [report, setReport] = useState<Report | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/report/${sessionId}`)
+    fetch(`${API_BASE_URL}/api/report/${sessionId}`)
       .then(res => res.json())
       .then(data => setReport(data))
       .catch(console.error);
