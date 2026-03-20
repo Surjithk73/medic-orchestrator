@@ -301,3 +301,6 @@ For questions or support, please open an issue on GitHub.
 
 ## Contributors
 Thanks to all contributors!
+
+## Acknowledgments
+Special thanks to the team!
