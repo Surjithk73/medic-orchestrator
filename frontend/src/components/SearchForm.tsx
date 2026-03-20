@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Activity, Microscope, Filter } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Activity, Microscope } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function SearchForm({ onSearch }: { onSearch: (molecule: string) => void }) {
   const [molecule, setMolecule] = useState("");

@@ -38,7 +38,7 @@ export default function Home() {
             // Still aggregating, wait and try again
             setTimeout(pollReport, 5000);
           }
-        } catch (err) {
+        } catch {
           setTimeout(pollReport, 5000);
         }
       };

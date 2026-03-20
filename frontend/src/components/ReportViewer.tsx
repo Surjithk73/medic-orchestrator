@@ -2,10 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Zap, Shield, ChevronRight } from "lucide-react";
+import { Zap } from "lucide-react";
+
+interface RepurposingOpportunity {
+  target_indication: string;
+  opportunity_score: number;
+  rationale: string;
+  patent_barrier: string;
+  clinical_precedent: string;
+}
+
+interface Report {
+  executive_summary?: string;
+  opportunities?: RepurposingOpportunity[];
+  data_gaps?: string[];
+}
 
 export default function ReportViewer({ sessionId }: { sessionId: string }) {
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<Report | null>(null);
 
   useEffect(() => {
     fetch(`http://localhost:8000/api/report/${sessionId}`)
@@ -66,7 +80,7 @@ export default function ReportViewer({ sessionId }: { sessionId: string }) {
           Top Identified Opportunities
         </h3>
         
-        {opportunities.map((op: any, index: number) => {
+        {opportunities.map((op: RepurposingOpportunity, index: number) => {
           const colorClass = index % 2 === 0 ? "indigo" : "purple";
           return (
             <div key={index} className={`group relative bg-[#0a0a0b] border border-zinc-800 hover:border-${colorClass}-500/50 rounded-3xl p-6 transition-all duration-300`}>
