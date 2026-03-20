@@ -256,18 +256,39 @@ pytest --cov=backend tests/
 
 ## Deployment
 
-### Docker
+### Frontend (Vercel)
+
+The frontend is configured to deploy to Vercel:
 
 ```bash
-docker-compose up -d
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
 ```
 
-### Manual
+The `vercel.json` configuration automatically builds the Next.js frontend from the `frontend/` directory.
 
-1. Deploy backend to any Python hosting (Railway, Render, Fly.io)
-2. Deploy frontend to Vercel
-3. Set environment variables in hosting platform
-4. Update CORS origins in `backend/main.py`
+### Backend (Separate Hosting)
+
+The FastAPI backend should be deployed separately to:
+- **Railway** (recommended for Python apps)
+- **Render** 
+- **Fly.io**
+- **AWS Lambda** (with Mangum adapter)
+
+**Important:** Update the frontend API URLs in `frontend/src/` to point to your deployed backend URL.
+
+### Environment Variables
+
+Set these in your hosting platform:
+- `GOOGLE_API_KEY`
+- `OPENROUTER_API_KEY`
+- `SUPABASE_URL` / `SUPABASE_KEY`
+- `QDRANT_URL` / `QDRANT_API_KEY`
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+- `EPO_CONSUMER_KEY` / `EPO_CONSUMER_SECRET`
 
 ## Contributing
 
@@ -298,15 +319,3 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **⚠️ Disclaimer:** This tool is for research purposes only. Always consult qualified professionals for medical and regulatory decisions.
-
-## Contributors
-Thanks to all contributors!
-
-## Acknowledgments
-Special thanks to the team!
-
-## Contributors
-Thanks to all contributors!
-
-## Acknowledgments
-Special thanks to the team!
