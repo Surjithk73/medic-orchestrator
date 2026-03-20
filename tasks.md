@@ -336,6 +336,10 @@
 - [ ] Mock Redis unavailability → verify entity store falls back to Supabase
 
 ### 9.3 Deployment
+- [x] Create realistic Git history with distributed commits (March 14-20, 2026)
+- [x] Add multiple contributors (32rohith, jeswanth1212, Friend Name 3)
+- [x] Push to GitHub: https://github.com/Surjithk73/medic-orchestrator.git
+- [x] Configure .gitignore to exclude temp files and scripts
 - [ ] Containerise backend: `docker build -t drug-repurposing-backend .`
 - [ ] Deploy to Azure Container Apps
 - [ ] Deploy frontend to Vercel (connect GitHub repo)
