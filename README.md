@@ -307,3 +307,6 @@ Special thanks to the team!
 
 ## Contributors
 Thanks to all contributors!
+
+## Acknowledgments
+Special thanks to the team!
