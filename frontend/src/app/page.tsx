@@ -28,6 +28,13 @@ export default function Home() {
       const newSessionId = data.session_id || "mock-session-1234";
       setSessionId(newSessionId);
       
+      // Check if report was served from cache
+      if (data.from_cache === true) {
+        // Report is already available, show it immediately
+        setMode("report");
+        return;
+      }
+      
       // 2. Poll for the final report every 5 seconds
       const pollReport = async () => {
         try {
