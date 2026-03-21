@@ -9,3 +9,5 @@ const rawUrl = process.env.NEXT_PUBLIC_API_URL ||
 
 // Strip trailing slash to prevent double-slash in API paths
 export const API_BASE_URL = rawUrl.replace(/\/$/, '');
+
+export const SITE_URL = 'https://medorch.vercel.app';
