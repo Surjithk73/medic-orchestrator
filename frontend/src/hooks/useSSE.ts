@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 const API_BASE_URL = 
   process.env.NEXT_PUBLIC_API_URL || 
   (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-    ? 'https://your-backend-url.com' // Replace with your deployed backend URL
-    : 'http://localhost:8000');
+    ? 'https://medic-orchestrator-production.up.railway.app'
+    : 'http://localhost:8080');
 
 // Type describing the status payloads flowing from the backend
 export interface AgentProgressEvent {
