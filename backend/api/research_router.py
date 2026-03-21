@@ -58,7 +58,28 @@ async def start_research(payload: ResearchStartRequest):
         raise HTTPException(status_code=422, detail="Molecule name cannot be empty")
     
     try:
-        # First, resolve the canonical name via planner (lightweight ChEMBL lookup)
+        from backend.memory.context_manager import context_manager
+
+        # --- Fast cache check BEFORE running planner ---
+        # Try the raw input name first (handles exact matches like "Thalidomide")
+        if not payload.force_refresh:
+            cached_report = await report_cache.get(molecule)
+            if cached_report:
+                session_id = await create_session(molecule=molecule)
+                import os
+                os.makedirs("tmp_reports", exist_ok=True)
+                with open(f"tmp_reports/{session_id}.json", "w") as f:
+                    json.dump(cached_report, f, indent=2)
+                print(f"[{session_id}] Fast cache hit for raw name: {molecule}")
+                return ResearchStartResponse(
+                    session_id=str(session_id),
+                    status="complete",
+                    canonical=molecule,
+                    estimated_duration_seconds=0,
+                    from_cache=True
+                )
+
+        # No fast cache hit — resolve canonical name via planner
         temp_state: ResearchState = {
             "session_id": "temp",
             "molecule_name": molecule,
@@ -70,30 +91,20 @@ async def start_research(payload: ResearchStartRequest):
             "synthesis_ready": False
         }
         
-        # Get canonical name from ChEMBL
-        from backend.memory.context_manager import context_manager
         await context_manager.set_session_entity("temp", {})
         planner_result = await planner_node(temp_state)
         canonical_name = planner_result.get("molecule_name", molecule)
         
-        # Check cache unless force_refresh is True
-        if not payload.force_refresh:
+        # Check cache again with resolved canonical name (if different from raw input)
+        if not payload.force_refresh and canonical_name.upper() != molecule.upper():
             cached_report = await report_cache.get(canonical_name)
             if cached_report:
-                # Create a new session for tracking, but mark as cached
                 session_id = await create_session(molecule=molecule)
-                
-                # Save cached report to this session's tmp_reports
                 import os
                 os.makedirs("tmp_reports", exist_ok=True)
                 with open(f"tmp_reports/{session_id}.json", "w") as f:
                     json.dump(cached_report, f, indent=2)
-                
-                # Get cache TTL for info
-                ttl = await report_cache.get_ttl(canonical_name)
-                
-                print(f"[{session_id}] Serving cached report for {canonical_name} (TTL: {ttl}s)")
-                
+                print(f"[{session_id}] Cache hit for canonical name: {canonical_name}")
                 return ResearchStartResponse(
                     session_id=str(session_id),
                     status="complete",
@@ -102,7 +113,7 @@ async def start_research(payload: ResearchStartRequest):
                     from_cache=True
                 )
         
-        # No cache or force_refresh — run full pipeline
+        # No cache — run full pipeline
         session_id = await create_session(molecule=molecule)
         asyncio.create_task(enqueue_research_pipeline(session_id, molecule))
         
