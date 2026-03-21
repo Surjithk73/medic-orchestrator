@@ -35,3 +35,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles for PDF Export */
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Remove backgrounds and borders for print */
+  * {
+    background: white !important;
+    border-color: #e5e7eb !important;
+  }
+  
+  /* Keep text colors readable */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000 !important;
+  }
+  
+  p, span, div {
+    color: #374151 !important;
+  }
+  
+  /* Page breaks */
+  .opportunity-card {
+    page-break-inside: avoid;
+  }
+  
+  /* Remove shadows and effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}

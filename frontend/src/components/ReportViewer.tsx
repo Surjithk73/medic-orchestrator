@@ -59,6 +59,45 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8">
+      {/* Action Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between print:hidden"
+      >
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition flex items-center gap-2 text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export PDF
+          </button>
+          <button
+            onClick={() => {
+              const reportData = JSON.stringify(report, null, 2);
+              const blob = new Blob([reportData], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${molecule.toLowerCase()}-report.json`;
+              a.click();
+            }}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition flex items-center gap-2 text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            Export JSON
+          </button>
+        </div>
+        <div className="text-sm text-zinc-500">
+          Session: {sessionId.slice(0, 8)}...
+        </div>
+      </motion.div>
+
       {/* Molecule Title */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
