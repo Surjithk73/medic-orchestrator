@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Microscope } from "lucide-react";
+import { Activity, Microscope, Sparkles, Zap, Shield, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function SearchForm({ onSearch }: { onSearch: (molecule: string) => void }) {
@@ -16,26 +16,41 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-12 mb-8">
+    <div className="w-full max-w-6xl mx-auto">
+      {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-12"
       >
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-zinc-100">
-          Discover Repurposing<br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
-            Opportunities
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-6">
+          <Sparkles className="w-4 h-4 text-indigo-400" />
+          <span className="text-sm text-indigo-300 font-medium">Powered by Multi-Agent AI</span>
+        </div>
+        
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
+          <span className="text-zinc-100">Discover</span>
+          <br/>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+            Repurposing Opportunities
           </span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-          Multi-agent orchestration analyzing clinical, patent, regulatory, and market domains to identify novel indications.
+        
+        <p className="text-zinc-400 text-xl max-w-3xl mx-auto leading-relaxed">
+          Autonomous intelligence platform analyzing clinical trials, patents, regulatory data, and market insights to identify novel therapeutic applications.
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="relative group">
-        <div className={`absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 ${isFocused ? 'opacity-75 duration-200' : ''}`}></div>
-        <div className="relative flex items-center bg-[#121214] ring-1 ring-white/10 rounded-2xl p-2 shadow-2xl">
+      {/* Search Bar */}
+      <motion.form 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        onSubmit={handleSubmit} 
+        className="relative group mb-8"
+      >
+        <div className={`absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000 ${isFocused ? 'opacity-50' : ''}`}></div>
+        <div className="relative flex items-center bg-zinc-900/90 backdrop-blur-xl ring-1 ring-white/10 rounded-2xl p-3 shadow-2xl">
           <div className="pl-4 pr-3 text-zinc-400">
             <Microscope className="w-6 h-6" />
           </div>
@@ -46,24 +61,30 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter molecule or drug name (e.g., Aspirin, Metformin)..."
-            className="flex-1 bg-transparent border-none text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-0 text-lg py-3"
+            className="flex-1 bg-transparent border-none text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-0 text-lg py-4 px-2"
           />
           <button
             type="submit"
             disabled={!molecule.trim()}
-            className="bg-zinc-100 text-zinc-900 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-6 py-3 font-semibold transition-all flex items-center gap-2"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-8 py-4 font-semibold transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/25"
           >
             <span>Analyze</span>
             <Activity className="w-5 h-5" />
           </button>
         </div>
-      </form>
+      </motion.form>
 
-      <div className="mt-6 space-y-2">
-        <p className="text-center text-sm text-zinc-400">
-          Pre-analyzed molecules cached for instant access:
+      {/* Cached Molecules */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-16"
+      >
+        <p className="text-center text-sm text-zinc-500 mb-4">
+          Pre-analyzed molecules cached for <span className="text-indigo-400 font-medium">instant access</span>:
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           {['Metformin', 'Ibuprofen', 'Thalidomide'].map(term => (
             <button 
               key={term} 
@@ -71,46 +92,64 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
                 setMolecule(term);
                 onSearch(term);
               }}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-zinc-300 hover:text-white transition-all border border-indigo-500/30 hover:border-indigo-400/50 font-medium"
+              className="group px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-zinc-300 hover:text-white transition-all border border-indigo-500/30 hover:border-indigo-400/50 font-medium relative overflow-hidden"
             >
-              {term} ⚡
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/10 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              <span className="relative flex items-center gap-2">
+                {term}
+                <Zap className="w-4 h-4 text-indigo-400" />
+              </span>
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Features Section */}
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        <div className="text-center p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+      {/* Features Grid */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-zinc-900/50 to-zinc-900/30 border border-zinc-800/50 hover:border-indigo-500/30 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Zap className="w-7 h-7 text-indigo-400" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-100 mb-3">Lightning Fast</h3>
+            <p className="text-zinc-400 leading-relaxed">
+              Cached results load instantly. New analyses complete in 2-3 minutes with real-time progress updates.
+            </p>
           </div>
-          <h3 className="font-semibold text-zinc-200 mb-2">Lightning Fast</h3>
-          <p className="text-sm text-zinc-500">Cached results load instantly. New analyses complete in 2-3 minutes.</p>
         </div>
 
-        <div className="text-center p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+        <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-zinc-900/50 to-zinc-900/30 border border-zinc-800/50 hover:border-purple-500/30 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Shield className="w-7 h-7 text-purple-400" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-100 mb-3">Multi-Agent AI</h3>
+            <p className="text-zinc-400 leading-relaxed">
+              4 specialized agents analyze clinical trials, patents, market data, and regulatory information in parallel.
+            </p>
           </div>
-          <h3 className="font-semibold text-zinc-200 mb-2">Multi-Agent AI</h3>
-          <p className="text-sm text-zinc-500">4 specialized agents analyze clinical, patent, market, and regulatory data.</p>
         </div>
 
-        <div className="text-center p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50">
-          <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+        <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-zinc-900/50 to-zinc-900/30 border border-zinc-800/50 hover:border-pink-500/30 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-pink-600/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <TrendingUp className="w-7 h-7 text-pink-400" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-100 mb-3">Actionable Insights</h3>
+            <p className="text-zinc-400 leading-relaxed">
+              Comprehensive reports with opportunity scores, citations, and strategic recommendations for decision-making.
+            </p>
           </div>
-          <h3 className="font-semibold text-zinc-200 mb-2">Comprehensive Reports</h3>
-          <p className="text-sm text-zinc-500">Detailed analysis with citations, scores, and actionable insights.</p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
