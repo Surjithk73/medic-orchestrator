@@ -10,7 +10,8 @@ import { API_BASE_URL } from "@/lib/config";
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [molecule, setMolecule] = useState<string | null>(null);
-  const [mode, setMode] = useState<"search" | "researching" | "report">("search");
+  const [mode, setMode] = useState<"search" | "researching" | "cached" | "report">("search");
+  const [cacheMessage, setCacheMessage] = useState<string>("");
 
   const handleSearch = async (query: string) => {
     setMolecule(query);
@@ -32,9 +33,14 @@ export default function Home() {
       
       // Check if report was served from cache
       if (data.from_cache === true) {
-        console.log("✅ Cache hit! Showing report immediately");  // DEBUG
-        // Report is already available, show it immediately
-        setMode("report");
+        console.log("✅ Cache hit! Showing cache message");  // DEBUG
+        setCacheMessage(`Pre-analyzed data for ${data.canonical || query} found in cache. Loading report...`);
+        setMode("cached");
+        
+        // Show cached message for 2 seconds, then show report
+        setTimeout(() => {
+          setMode("report");
+        }, 2000);
         return;
       }
       
@@ -101,6 +107,57 @@ export default function Home() {
               <div className="animate-pulse text-zinc-500 mt-8">
                 Simulation running via LangGraph Agents...
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {mode === "cached" && (
+          <motion.div
+            key="cached"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="w-full text-center"
+          >
+            <div className="max-w-2xl mx-auto">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", duration: 0.6 }}
+                className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 flex items-center justify-center"
+              >
+                <svg className="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </motion.div>
+              
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-bold text-zinc-100 mb-4"
+              >
+                Cached Data Available!
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-zinc-400 text-lg mb-6"
+              >
+                {cacheMessage}
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center justify-center gap-2 text-emerald-400"
+              >
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span className="text-sm font-medium">Loading report...</span>
+              </motion.div>
             </div>
           </motion.div>
         )}
