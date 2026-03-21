@@ -16,7 +16,7 @@ export interface AgentProgressEvent {
   timestamp?: string;
 }
 
-export function useSSE(sessionId: string | null) {
+export function useSSE(sessionId: string | null, onComplete?: () => void) {
   const [events, setEvents] = useState<AgentProgressEvent[]>([]);
   const [isDone, setIsDone] = useState(false);
 
@@ -29,9 +29,15 @@ export function useSSE(sessionId: string | null) {
     evtSource.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        if (data.status === 'synthesis_complete') {
+        
+        // Check for synthesis complete event
+        if (data.event === 'synthesis_complete' || data.status === 'synthesis_complete') {
           setIsDone(true);
           evtSource.close();
+          // Call the completion callback
+          if (onComplete) {
+            onComplete();
+          }
         } else {
           setEvents((prev) => [...prev, data as AgentProgressEvent]);
         }
@@ -48,7 +54,7 @@ export function useSSE(sessionId: string | null) {
     return () => {
       evtSource.close();
     };
-  }, [sessionId]);
+  }, [sessionId, onComplete]);
 
   return { events, isDone };
 }

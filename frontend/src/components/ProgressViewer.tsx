@@ -67,8 +67,8 @@ const colorClasses = {
   }
 };
 
-export default function ProgressViewer({ sessionId }: { sessionId: string }) {
-  const { events, isDone } = useSSE(sessionId);
+export default function ProgressViewer({ sessionId, onComplete }: { sessionId: string; onComplete?: () => void }) {
+  const { events, isDone } = useSSE(sessionId, onComplete);
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {

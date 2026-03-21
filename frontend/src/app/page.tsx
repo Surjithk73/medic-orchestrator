@@ -18,7 +18,7 @@ export default function Home() {
     setMode("researching");
     
     try {
-      // 1. Trigger backend orchestrator 
+      // Trigger backend orchestrator 
       const res = await fetch(`${API_BASE_URL}/api/research/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,14 +26,14 @@ export default function Home() {
       });
       
       const data = await res.json();
-      console.log("API Response:", data);  // DEBUG
+      console.log("API Response:", data);
       
-      const newSessionId = data.session_id || "mock-session-1234";
+      const newSessionId = data.session_id;
       setSessionId(newSessionId);
       
       // Check if report was served from cache
       if (data.from_cache === true) {
-        console.log("✅ Cache hit! Showing cache message");  // DEBUG
+        console.log("✅ Cache hit! Showing cache message");
         setCacheMessage(`Pre-analyzed data for ${data.canonical || query} found in cache. Loading report...`);
         setMode("cached");
         
@@ -44,31 +44,18 @@ export default function Home() {
         return;
       }
       
-      console.log("❌ Cache miss, starting polling");  // DEBUG
-      
-      // 2. Poll for the final report every 5 seconds
-      const pollReport = async () => {
-        try {
-          const reportRes = await fetch(`${API_BASE_URL}/api/report/${newSessionId}`);
-          if (reportRes.ok) {
-            // Document is ready
-            setMode("report");
-          } else {
-            // Still aggregating, wait and try again
-            setTimeout(pollReport, 5000);
-          }
-        } catch {
-          setTimeout(pollReport, 5000);
-        }
-      };
-      
-      // kick off polling
-      setTimeout(pollReport, 5000);
+      console.log("❌ Cache miss, research starting. SSE will notify when complete.");
+      // No polling needed - SSE will trigger onResearchComplete when synthesis is done
 
     } catch (e) {
       console.error(e);
       setMode("search");
     }
+  };
+
+  const handleResearchComplete = () => {
+    console.log("✅ Research complete! Showing report.");
+    setMode("report");
   };
 
   return (
@@ -103,9 +90,9 @@ export default function Home() {
               <h2 className="text-2xl font-semibold mb-4 text-zinc-200">
                 Orchestrating Research on <span className="text-indigo-400">{molecule}</span>
               </h2>
-              <ProgressViewer sessionId={sessionId!} />
+              <ProgressViewer sessionId={sessionId!} onComplete={handleResearchComplete} />
               <div className="animate-pulse text-zinc-500 mt-8">
-                Simulation running via LangGraph Agents...
+                Multi-agent research via LangGraph...
               </div>
             </div>
           </motion.div>
