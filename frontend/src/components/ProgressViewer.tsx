@@ -7,6 +7,13 @@ import { useState, useEffect } from "react";
 
 const domains = [
   { 
+    id: "planner", 
+    title: "Identity Resolution", 
+    icon: Sparkles,
+    color: "purple",
+    description: "Resolving molecular identity and aliases"
+  },
+  { 
     id: "clinical", 
     title: "Clinical Evidence", 
     icon: Activity,
@@ -37,6 +44,13 @@ const domains = [
 ];
 
 const colorClasses = {
+  purple: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+    text: "text-purple-300",
+    icon: "text-purple-400",
+    glow: "shadow-purple-500/20"
+  },
   blue: {
     bg: "bg-blue-500/10",
     border: "border-blue-500/30",

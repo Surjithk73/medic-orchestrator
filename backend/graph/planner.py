@@ -15,7 +15,7 @@ async def planner_node(state: ResearchState) -> dict:
         "event": "planner_started",
         "domain": "planner",
         "status": "started",
-        "message": f"Resolving identity for {molecule}..."
+        "message": f"Resolving molecular identity for {molecule}..."
     })
 
     # Try ChEMBL API first
@@ -48,8 +48,22 @@ async def planner_node(state: ResearchState) -> dict:
                 description = f"Molecular formula: {props.get('full_molformula', 'N/A')}"
 
             print(f"[{session_id}] ChEMBL resolved: {canonical_name} | ChEMBL ID: {chembl_id} (aliases: {len(aliases)})")
+            
+            await sse_manager.emit(session_id, {
+                "event": "planner_progress",
+                "domain": "planner",
+                "status": "started",
+                "message": f"Resolved to {canonical_name} (ChEMBL ID: {chembl_id})"
+            })
     except Exception as e:
         print(f"[{session_id}] ChEMBL lookup failed: {e}. Using LLM fallback.")
+        
+        await sse_manager.emit(session_id, {
+            "event": "planner_progress",
+            "domain": "planner",
+            "status": "started",
+            "message": f"ChEMBL lookup failed, using AI to resolve identity..."
+        })
         
         # Fallback to LLM if ChEMBL fails
         prompt = f"Resolve the canonical name and aliases for the molecule/drug: {molecule}. Output according to MoleculeIdentity schema."
@@ -60,6 +74,8 @@ async def planner_node(state: ResearchState) -> dict:
             description = identity.description
         except Exception as llm_err:
             print(f"[{session_id}] LLM fallback also failed: {llm_err}")
+            # Use the original name as fallback
+            canonical_name = molecule
     
     # Save to context
     await context_manager.set_session_entity(session_id, {
@@ -69,12 +85,11 @@ async def planner_node(state: ResearchState) -> dict:
         "chembl_id": chembl_id
     })
     
-    from backend.memory.sse_manager import sse_manager
     await sse_manager.emit(session_id, {
         "event": "planner_completed",
         "domain": "planner",
         "status": "completed",
-        "message": f"Resolved to {canonical_name}"
+        "message": f"Identity resolved: {canonical_name}. Dispatching 4 research agents..."
     })
         
     return {
