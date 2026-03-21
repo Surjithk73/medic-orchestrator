@@ -47,12 +47,12 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         onSubmit={handleSubmit} 
-        className="relative group mb-8"
+        className="relative group mb-8 max-w-3xl mx-auto"
       >
-        <div className={`absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000 ${isFocused ? 'opacity-50' : ''}`}></div>
-        <div className="relative flex items-center bg-zinc-900/90 backdrop-blur-xl ring-1 ring-white/10 rounded-2xl p-3 shadow-2xl">
-          <div className="pl-4 pr-3 text-zinc-400">
-            <Microscope className="w-6 h-6" />
+        <div className={`absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000 ${isFocused ? 'opacity-40' : ''}`}></div>
+        <div className="relative flex items-center bg-zinc-900/90 backdrop-blur-xl ring-1 ring-white/10 rounded-xl p-2 shadow-2xl">
+          <div className="pl-3 pr-2 text-zinc-400">
+            <Microscope className="w-5 h-5" />
           </div>
           <input
             type="text"
@@ -61,15 +61,15 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Enter molecule or drug name (e.g., Aspirin, Metformin)..."
-            className="flex-1 bg-transparent border-none text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-0 text-lg py-4 px-2"
+            className="flex-1 bg-transparent border-none text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-0 text-base py-3 px-2"
           />
           <button
             type="submit"
             disabled={!molecule.trim()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-8 py-4 font-semibold transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/25"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-6 py-2.5 font-semibold transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/25"
           >
             <span>Analyze</span>
-            <Activity className="w-5 h-5" />
+            <Activity className="w-4 h-4" />
           </button>
         </div>
       </motion.form>
