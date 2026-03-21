@@ -18,3 +18,11 @@ app.include_router(report_router.router, prefix="/api/report", tags=["Report"])
 @app.get("/")
 def health_check():
     return {"status": "ok", "service": "medic_orchestrator"}
+
+# For Railway deployment
+if __name__ == "__main__":
+    import os
+    import uvicorn
+    
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
