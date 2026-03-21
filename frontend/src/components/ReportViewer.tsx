@@ -20,7 +20,7 @@ interface Report {
   data_gaps?: string[];
 }
 
-export default function ReportViewer({ sessionId }: { sessionId: string }) {
+export default function ReportViewer({ sessionId, molecule }: { sessionId: string; molecule: string }) {
   const [report, setReport] = useState<Report | null>(null);
 
   useEffect(() => {
@@ -59,6 +59,17 @@ export default function ReportViewer({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8">
+      {/* Molecule Title */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2">
+          {molecule}
+        </h1>
+        <p className="text-zinc-500 text-sm uppercase tracking-wider">Drug Repurposing Analysis Report</p>
+      </motion.div>
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

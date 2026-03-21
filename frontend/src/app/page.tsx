@@ -121,7 +121,7 @@ export default function Home() {
                 ← New Investigation
               </button>
             </div>
-            <ReportViewer sessionId={sessionId!} />
+            <ReportViewer sessionId={sessionId!} molecule={molecule!} />
           </motion.div>
         )}
       </AnimatePresence>
