@@ -87,19 +87,45 @@ class PatentAgent(BaseAgent):
                                 
                                 if int(total_results) > 0:
                                     search_result = biblio_search.get("ops:search-result", {})
-                                    results = search_result.get("exchange-documents", [])
+                                    
+                                    # The results can be in different places depending on the response
+                                    results = search_result.get("ops:publication-reference", [])
+                                    if not results:
+                                        results = search_result.get("exchange-documents", [])
+                                    if not results:
+                                        # Sometimes it's directly in search-result
+                                        results = search_result.get("ops:search-result-item", [])
+                                    
+                                    print(f"[{self.session_id}] EPO search-result keys: {search_result.keys()}")
                                     
                                     if isinstance(results, dict):
                                         results = [results]
                                     
-                                    num_patents = len(results)
-                                    print(f"[{self.session_id}] EPO: {num_patents} patents found")
+                                    # If we have search-result-item, extract publication references
+                                    if results and isinstance(results, list) and results[0].get("ops:publication-reference"):
+                                        print(f"[{self.session_id}] Found ops:search-result-item format")
+                                        extracted_results = []
+                                        for item in results[:10]:
+                                            pub_ref = item.get("ops:publication-reference", {})
+                                            if pub_ref:
+                                                extracted_results.append({"publication-reference": pub_ref})
+                                        results = extracted_results
+                                    
+                                    num_patents = min(len(results), 10)  # Cap at 10
+                                    print(f"[{self.session_id}] EPO: {num_patents} patents extracted from {len(results)} results")
                                     
                                     for doc in results[:10]:
                                         try:
-                                            biblio = doc.get("exchange-document", doc)
-                                            biblio_data = biblio.get("bibliographic-data", {})
-                                            pub_ref = biblio_data.get("publication-reference", {})
+                                            # Handle different response formats
+                                            if "publication-reference" in doc:
+                                                # Direct publication reference format
+                                                pub_ref = doc.get("publication-reference", {})
+                                            else:
+                                                # Exchange document format
+                                                biblio = doc.get("exchange-document", doc)
+                                                biblio_data = biblio.get("bibliographic-data", {})
+                                                pub_ref = biblio_data.get("publication-reference", {})
+                                            
                                             doc_id = pub_ref.get("document-id", [])
                                             
                                             # Handle both list and dict formats
@@ -108,22 +134,34 @@ class PatentAgent(BaseAgent):
                                             
                                             doc_num = doc_id.get("doc-number", {})
                                             country = doc_id.get("country", {})
+                                            kind = doc_id.get("kind", {})
                                             
                                             # Extract values (can be nested dicts with "$" key)
-                                            num_val = doc_num.get("$", doc_num) if isinstance(doc_num, dict) else doc_num
-                                            country_val = country.get("$", country) if isinstance(country, dict) else country
+                                            num_val = doc_num.get("$", doc_num) if isinstance(doc_num, dict) else str(doc_num)
+                                            country_val = country.get("$", country) if isinstance(country, dict) else str(country)
+                                            kind_val = kind.get("$", kind) if isinstance(kind, dict) else str(kind)
                                             
-                                            # Get title if available
-                                            invention_title = biblio_data.get("invention-title", [])
-                                            if isinstance(invention_title, list):
-                                                invention_title = invention_title[0] if invention_title else {}
-                                            title_text = invention_title.get("$", "No title") if isinstance(invention_title, dict) else str(invention_title)
+                                            if not num_val or num_val == "None":
+                                                continue
                                             
-                                            patent_context += f"Patent: {num_val} | Country: {country_val} | Title: {title_text[:100]}\n"
+                                            # Try to get title if available (only in exchange-document format)
+                                            title_text = "Patent document"
+                                            if "exchange-document" in doc or "bibliographic-data" in doc.get("exchange-document", {}):
+                                                biblio = doc.get("exchange-document", doc)
+                                                biblio_data = biblio.get("bibliographic-data", {})
+                                                invention_title = biblio_data.get("invention-title", [])
+                                                if isinstance(invention_title, list):
+                                                    invention_title = invention_title[0] if invention_title else {}
+                                                if isinstance(invention_title, dict):
+                                                    title_text = invention_title.get("$", title_text)
+                                                elif invention_title:
+                                                    title_text = str(invention_title)
+                                            
+                                            patent_context += f"Patent: {country_val}{num_val}{kind_val} | Title: {title_text[:100]}\n"
 
                                             await self.add_citation(
                                                 url=f"https://worldwide.espacenet.com/patent/search?q={num_val}",
-                                                title=f"Patent {num_val} ({country_val})"
+                                                title=f"Patent {country_val}{num_val} - {title_text[:50]}"
                                             )
                                         except Exception as doc_err:
                                             print(f"[{self.session_id}] Error parsing patent doc: {doc_err}")
