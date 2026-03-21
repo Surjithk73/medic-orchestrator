@@ -4,6 +4,7 @@ from backend.retrieval.embedder import embed_chunks
 from backend.db.qdrant_client import upsert_chunks, hybrid_search
 from backend.memory.context_manager import context_manager
 import requests as req_lib
+import asyncio
 
 # ClinicalTrials.gov blocks httpx via TLS fingerprinting — use requests instead
 CT_BASE = "https://clinicaltrials.gov/api/v2"
@@ -30,7 +31,9 @@ class ClinicalAgent(BaseAgent):
         try:
             # query.intr searches the Intervention/Treatment search area (drug name, synonyms)
             # This is more targeted than query.term for drug repurposing use cases
-            response = req_lib.get(
+            # Run synchronous requests call in thread pool to avoid blocking event loop
+            response = await asyncio.to_thread(
+                req_lib.get,
                 f"{CT_BASE}/studies",
                 params={
                     "query.intr": canon,
