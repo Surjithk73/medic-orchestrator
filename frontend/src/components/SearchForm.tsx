@@ -67,7 +67,10 @@ export default function SearchForm({ onSearch }: { onSearch: (molecule: string) 
           {['Metformin', 'Ibuprofen', 'Thalidomide'].map(term => (
             <button 
               key={term} 
-              onClick={() => setMolecule(term)}
+              onClick={() => {
+                setMolecule(term);
+                onSearch(term);
+              }}
               className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-zinc-300 hover:text-white transition-all border border-indigo-500/30 hover:border-indigo-400/50 font-medium"
             >
               {term} ⚡
