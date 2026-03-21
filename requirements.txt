@@ -6,6 +6,7 @@ langchain-google-genai
 langchain-community
 langchain-openai
 httpx
+requests
 pydantic
 qdrant-client
 supabase
