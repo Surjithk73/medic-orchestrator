@@ -7,13 +7,6 @@ import { useState, useEffect } from "react";
 
 const domains = [
   { 
-    id: "planner", 
-    title: "Identity Resolution", 
-    icon: Sparkles,
-    color: "purple",
-    description: "Resolving molecular identity and aliases"
-  },
-  { 
     id: "clinical", 
     title: "Clinical Evidence", 
     icon: Activity,

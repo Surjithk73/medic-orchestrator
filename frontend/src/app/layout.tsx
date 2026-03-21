@@ -5,7 +5,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Autonomous Drug Repurposing',
+  title: 'MedOrch',
   description: 'AI-driven bio-pharma intelligence platform',
 };
 
@@ -30,9 +30,8 @@ export default function RootLayout({
               </span>
             </div>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
-              <a href="/" className="text-zinc-100 transition-colors">Platform</a>
-              <a href="#" className="hover:text-zinc-100 transition-colors">Agents</a>
-              <a href="#" className="hover:text-zinc-100 transition-colors">Ledger</a>
+              <a href="/" className="hover:text-zinc-100 transition-colors">Platform</a>
+              <a href="/agents" className="hover:text-zinc-100 transition-colors">Agents</a>
             </nav>
           </div>
         </header>
