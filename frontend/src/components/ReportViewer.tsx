@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, AlertTriangle, FileText, Beaker, Scale, Building2 } from "lucide-react";
+import { Sparkles, TrendingUp, AlertTriangle, FileText, Beaker, Scale, Building2, Link as LinkIcon } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
+import CitationDrawer from "./CitationDrawer";
+import OpportunityMatrix from "./OpportunityMatrix";
+import ReasoningTrace from "./ReasoningTrace";
 
 interface RepurposingOpportunity {
   target_indication: string;
@@ -11,6 +14,28 @@ interface RepurposingOpportunity {
   rationale: string;
   patent_barrier: string;
   clinical_precedent: string;
+  clinical_score?: number;
+  commercial_score?: number;
+  fto_score?: number;
+  regulatory_score?: number;
+}
+
+interface Citation {
+  id: string;
+  domain: string;
+  url: string;
+  title: string;
+  source_section?: string;
+  retrieved_at?: string;
+  confidence?: number;
+}
+
+interface TraceEvent {
+  event: string;
+  domain: string;
+  status: string;
+  message: string;
+  timestamp?: string;
 }
 
 interface Report {
@@ -18,10 +43,14 @@ interface Report {
   mechanism_of_action?: string;
   opportunities?: RepurposingOpportunity[];
   data_gaps?: string[];
+  citations?: Citation[];
+  trace_events?: TraceEvent[];
 }
 
 export default function ReportViewer({ sessionId, molecule }: { sessionId: string; molecule: string }) {
   const [report, setReport] = useState<Report | null>(null);
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/report/${sessionId}`)
@@ -29,6 +58,11 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
       .then(data => setReport(data))
       .catch(console.error);
   }, [sessionId]);
+
+  const handleCitationClick = (citation: Citation) => {
+    setSelectedCitation(citation);
+    setIsDrawerOpen(true);
+  };
 
   if (!report) {
     return (
@@ -43,6 +77,8 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
 
   const opportunities = report.opportunities || [];
   const gaps = report.data_gaps || [];
+  const citations = report.citations || [];
+  const traceEvents = report.trace_events || [];
 
   // Get score color
   const getScoreColor = (score: number) => {
@@ -58,7 +94,14 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8">
+    <>
+      <CitationDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        citation={selectedCitation}
+      />
+      
+      <div className="w-full max-w-7xl mx-auto space-y-8">
       {/* Action Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -146,6 +189,16 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
           </div>
           <p className="text-zinc-400 leading-relaxed">{report.mechanism_of_action}</p>
         </motion.div>
+      )}
+
+      {/* Reasoning Trace */}
+      {traceEvents.length > 0 && (
+        <ReasoningTrace events={traceEvents} />
+      )}
+
+      {/* Opportunity Matrix */}
+      {opportunities.length > 0 && (
+        <OpportunityMatrix opportunities={opportunities} />
       )}
 
       {/* Opportunities Grid */}
@@ -244,6 +297,44 @@ export default function ReportViewer({ sessionId, molecule }: { sessionId: strin
           </ul>
         </motion.div>
       )}
+
+      {/* Citations */}
+      {citations.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="rounded-2xl bg-zinc-900/50 border border-zinc-800 p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <LinkIcon className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-lg font-semibold text-zinc-100">Citations & Sources</h3>
+            <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-medium border border-indigo-500/30">
+              {citations.length} {citations.length === 1 ? 'Source' : 'Sources'}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {citations.map((citation: Citation, index: number) => (
+              <button
+                key={index}
+                onClick={() => handleCitationClick(citation)}
+                className="text-left p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/50 hover:border-indigo-500/50 hover:bg-zinc-800/50 transition-all group"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <span className="px-2 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold uppercase border border-indigo-500/30">
+                    {citation.domain}
+                  </span>
+                  <LinkIcon className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400 transition-colors" />
+                </div>
+                <p className="text-sm text-zinc-300 font-medium line-clamp-2 group-hover:text-zinc-100 transition-colors">
+                  {citation.title}
+                </p>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
+    </>
   );
 }

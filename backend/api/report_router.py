@@ -9,8 +9,29 @@ async def fetch_report(session_id: str):
     path = f"tmp_reports/{session_id}.json"
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Report not generated yet")
+    
     with open(path, "r") as f:
-        return json.load(f)
+        report_data = json.load(f)
+    
+    # Fetch citations from Redis
+    from backend.memory.citation_ledger import citation_ledger
+    try:
+        citations = await citation_ledger.get_all(session_id)
+        report_data["citations"] = citations
+    except Exception as e:
+        print(f"Failed to fetch citations: {e}")
+        report_data["citations"] = []
+    
+    # Fetch trace events from SSE manager history
+    from backend.memory.sse_manager import sse_manager
+    try:
+        trace_events = sse_manager.get_session_history(session_id)
+        report_data["trace_events"] = trace_events
+    except Exception as e:
+        print(f"Failed to fetch trace events: {e}")
+        report_data["trace_events"] = []
+    
+    return report_data
 
 @router.get("/{session_id}/citations")
 async def fetch_citations(session_id: str):
