@@ -9,13 +9,15 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-# Multiple Gemini API keys for rate limit management
-GEMINI_API_KEYS = [
-    "AIzaSyCtKlZzTq0j98COFuMRogtaRKu0FM5Wj_M",
-    "AIzaSyBtrxZ2WwvIQDuyW0wV5YbfrVKw8PFfFnY",
-    "AIzaSyBWgSGwBZ97hmNGaO-7S9FzqttNOyTMvpA",
-    "AIzaSyDaSzU3vn3wzmKjvJBzKvijjDDOn11uc2o"
-]
+# Multiple Gemini API keys for rate limit management (from environment)
+GEMINI_API_KEYS = os.environ.get("GEMINI_API_KEYS", "").split(",")
+if not GEMINI_API_KEYS or GEMINI_API_KEYS == [""]:
+    # Fallback to single key if GEMINI_API_KEYS not set
+    single_key = os.environ.get("GOOGLE_API_KEY", "")
+    GEMINI_API_KEYS = [single_key] if single_key else []
+
+if not GEMINI_API_KEYS:
+    print("WARNING: No Gemini API keys configured!")
 
 # Track which key to use next (round-robin)
 _current_key_index = 0
@@ -23,6 +25,8 @@ _current_key_index = 0
 def _get_next_gemini_key() -> str:
     """Get next API key in round-robin fashion"""
     global _current_key_index
+    if not GEMINI_API_KEYS:
+        return ""
     key = GEMINI_API_KEYS[_current_key_index]
     _current_key_index = (_current_key_index + 1) % len(GEMINI_API_KEYS)
     return key
