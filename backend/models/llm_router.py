@@ -8,6 +8,20 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
+def _make_nemotron() -> ChatOpenAI:
+    """Use NVIDIA Nemotron as primary model - fast and free"""
+    return ChatOpenAI(
+        model="nvidia/llama-3.1-nemotron-70b-instruct",
+        api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+        base_url="https://openrouter.ai/api/v1",
+        temperature=0.1,
+        max_retries=2,
+        default_headers={
+            "HTTP-Referer": "https://medic-orchestrator.app",
+            "X-Title": "Medic Orchestrator"
+        }
+    )
+
 def _make_gemini_flash() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
@@ -22,10 +36,10 @@ def _make_gemini_pro() -> ChatGoogleGenerativeAI:
         max_retries=2
     )
 
-def _make_hunter_alpha() -> ChatOpenAI:
-    """Use NVIDIA Nemotron free model for structured output fallback"""
+def _make_deepseek() -> ChatOpenAI:
+    """DeepSeek R1 for complex reasoning"""
     return ChatOpenAI(
-        model="nvidia/nemotron-3-super-120b-a12b:free",
+        model="deepseek/deepseek-r1",
         api_key=os.environ.get("OPENROUTER_API_KEY", ""),
         base_url="https://openrouter.ai/api/v1",
         temperature=0.1,
@@ -44,35 +58,41 @@ class LLMRouter:
     different loop' error that plagues globally-cached LLM clients.
 
     Fallback chain:
-      1. Gemini 2.5 Flash (fast, structured extraction)
-      2. Gemini 2.5 Pro   (stronger reasoning)
-      3. DeepSeek R1 via OpenRouter (deepseek/deepseek-r1)
+      1. Nemotron 70B (fast, free, good structured extraction)
+      2. DeepSeek R1 (stronger reasoning when needed)
+      3. Gemini 2.5 Flash (backup if OpenRouter fails)
     """
 
     async def invoke_extraction(self, prompt: str, schema_cls: Type[BaseModel]) -> BaseModel:
         try:
-            llm = _make_gemini_flash().with_structured_output(schema_cls)
+            llm = _make_nemotron().with_structured_output(schema_cls)
             return await llm.ainvoke(prompt)
         except Exception as e:
-            print(f"Gemini 2.5 Flash extraction failed: {e}. Trying Gemini 2.5 Pro...")
+            print(f"Nemotron extraction failed: {e}. Trying DeepSeek R1...")
 
         try:
-            llm = _make_gemini_pro().with_structured_output(schema_cls)
+            llm = _make_deepseek().with_structured_output(schema_cls)
             return await llm.ainvoke(prompt)
         except Exception as e:
-            print(f"Gemini 2.5 Pro extraction failed: {e}. Falling back to Hunter Alpha (OpenRouter)...")
+            print(f"DeepSeek R1 extraction failed: {e}. Falling back to Gemini Flash...")
 
-        llm = _make_hunter_alpha().with_structured_output(schema_cls)
+        llm = _make_gemini_flash().with_structured_output(schema_cls)
         return await llm.ainvoke(prompt)
 
     async def invoke_synthesis(self, prompt: str) -> str:
         try:
-            res = await _make_gemini_pro().ainvoke(prompt)
+            res = await _make_deepseek().ainvoke(prompt)
             return res.content
         except Exception as e:
-            print(f"Gemini 2.5 Pro synthesis failed: {e}. Falling back to Hunter Alpha...")
+            print(f"DeepSeek R1 synthesis failed: {e}. Falling back to Nemotron...")
 
-        res = await _make_hunter_alpha().ainvoke(prompt)
+        try:
+            res = await _make_nemotron().ainvoke(prompt)
+            return res.content
+        except Exception as e:
+            print(f"Nemotron synthesis failed: {e}. Falling back to Gemini Pro...")
+
+        res = await _make_gemini_pro().ainvoke(prompt)
         return res.content
 
 
