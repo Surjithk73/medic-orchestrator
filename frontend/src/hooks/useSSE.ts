@@ -9,9 +9,11 @@ const API_BASE_URL =
 
 // Type describing the status payloads flowing from the backend
 export interface AgentProgressEvent {
+  event?: string;
   domain: string;
   status: 'started' | 'completed' | 'failed';
   message: string;
+  timestamp?: string;
 }
 
 export function useSSE(sessionId: string | null) {
