@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 
-// API base URL configuration
-const API_BASE_URL = 
+// API base URL configuration - strip trailing slash to prevent double-slash in paths
+const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || 
   (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-    ? 'https://medic-orchestrator-production.up.railway.app' // No trailing slash
-    : 'http://localhost:8080');
+    ? 'https://medic-orchestrator-production.up.railway.app'
+    : 'http://localhost:8080')
+).replace(/\/$/, '');
 
 // Type describing the status payloads flowing from the backend
 export interface AgentProgressEvent {
