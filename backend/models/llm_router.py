@@ -1,5 +1,6 @@
 import os
 import json
+import random
 from typing import Type
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -9,162 +10,154 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-# Multiple Gemini API keys for rate limit management (from environment)
-GEMINI_API_KEYS = os.environ.get("GEMINI_API_KEYS", "").split(",")
-if not GEMINI_API_KEYS or GEMINI_API_KEYS == [""]:
-    # Fallback to single key if GEMINI_API_KEYS not set
-    single_key = os.environ.get("GOOGLE_API_KEY", "")
-    GEMINI_API_KEYS = [single_key] if single_key else []
+# Two API keys - alternate between them on every request
+GEMINI_API_KEYS = [k.strip() for k in os.environ.get("GEMINI_API_KEYS", "").split(",") if k.strip()]
+if not GEMINI_API_KEYS:
+    single = os.environ.get("GOOGLE_API_KEY", "")
+    GEMINI_API_KEYS = [single] if single else []
 
 if not GEMINI_API_KEYS:
     print("WARNING: No Gemini API keys configured!")
 
-# Track which key to use next (round-robin)
 _current_key_index = 0
 
-def _get_next_gemini_key() -> str:
-    """Get next API key in round-robin fashion"""
+def _get_next_key() -> str:
     global _current_key_index
     if not GEMINI_API_KEYS:
         return ""
-    key = GEMINI_API_KEYS[_current_key_index]
-    _current_key_index = (_current_key_index + 1) % len(GEMINI_API_KEYS)
+    key = GEMINI_API_KEYS[_current_key_index % len(GEMINI_API_KEYS)]
+    _current_key_index += 1
     return key
 
-def _make_gemini_flash() -> ChatGoogleGenerativeAI:
-    """Primary model - Gemini 2.5 Flash with rotating API keys"""
+# Models for agent extraction tasks (lighter, faster)
+AGENT_MODELS = [
+    "gemini-2.5-flash-lite-preview-06-17",
+    "gemini-3.1-flash-lite-preview",
+]
+
+# Models for final synthesis (more capable)
+SYNTHESIS_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-3-flash-preview",
+    "gemini-2.5-flash-lite-preview-06-17",
+]
+
+# Ultimate fallback
+FALLBACK_MODEL = "gemini-2.5-pro"
+
+def _make_model(model_name: str) -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model=model_name,
         temperature=0.1,
-        max_retries=2,
-        google_api_key=_get_next_gemini_key()
+        max_retries=1,
+        google_api_key=_get_next_key()
     )
 
-def _make_nemotron() -> ChatOpenAI:
-    """Fallback model - NVIDIA Nemotron"""
+def _make_openrouter_fallback() -> ChatOpenAI:
+    """Free Llama fallback via OpenRouter if all Gemini fails"""
     return ChatOpenAI(
-        model="nvidia/llama-3.1-nemotron-70b-instruct",
+        model="meta-llama/llama-3.3-70b-instruct:free",
         api_key=os.environ.get("OPENROUTER_API_KEY", ""),
         base_url="https://openrouter.ai/api/v1",
         temperature=0.0,
-        max_retries=3,
+        max_retries=2,
+        max_tokens=4096,
         model_kwargs={"response_format": {"type": "json_object"}},
         default_headers={
-            "HTTP-Referer": "https://medic-orchestrator.app",
+            "HTTP-Referer": "https://medorch.vercel.app",
             "X-Title": "Medic Orchestrator"
         }
-    )
-
-def _make_gemini_pro() -> ChatGoogleGenerativeAI:
-    """Last resort - Gemini 2.5 Pro with rotating API keys"""
-    return ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro",
-        temperature=0.2,
-        max_retries=2,
-        google_api_key=_get_next_gemini_key()
     )
 
 
 class LLMRouter:
     """
-    Creates fresh LangChain model instances on each call so they always bind
-    to the current running asyncio event loop.
-
-    Fallback chain:
-      1. Gemini 2.5 Flash (primary) - with rotating API keys
-      2. Nemotron 70B (fallback) - via OpenRouter
-      3. Gemini 2.5 Pro (last resort) - with rotating API keys
+    Extraction (agents): randomly picks from AGENT_MODELS, alternates API keys.
+    Synthesis (report):  randomly picks from SYNTHESIS_MODELS, alternates API keys.
+    Fallback chain: Gemini models → OpenRouter Llama → Gemini 2.5 Pro
     """
 
     async def invoke_extraction(self, prompt: str, schema_cls: Type[BaseModel]) -> BaseModel:
-        # Enhanced prompt with clear JSON instructions
         schema_json = schema_cls.model_json_schema()
-        
-        # Create example based on schema to guide the model
         example_fields = {}
         for field_name, field_info in schema_cls.model_fields.items():
-            if field_info.annotation == str:
+            ann = field_info.annotation
+            if ann == str:
                 example_fields[field_name] = "example text"
-            elif field_info.annotation == float:
+            elif ann == float:
                 example_fields[field_name] = 0.85
-            elif field_info.annotation == int:
+            elif ann == int:
                 example_fields[field_name] = 42
-            elif hasattr(field_info.annotation, '__origin__') and field_info.annotation.__origin__ == list:
+            elif hasattr(ann, '__origin__') and ann.__origin__ == list:
                 example_fields[field_name] = ["item1", "item2"]
             else:
                 example_fields[field_name] = None
-        
-        example_json = json.dumps(example_fields, indent=2)
-        
-        json_prompt = f"""You are a precise data extraction assistant. Extract information and respond with ONLY valid JSON.
+
+        json_prompt = f"""You are a precise data extraction assistant. Respond with ONLY valid JSON.
 
 {prompt}
 
 Required JSON Schema:
 {schema_json}
 
-Example JSON format:
-{example_json}
+Example format:
+{json.dumps(example_fields, indent=2)}
 
-CRITICAL RULES:
-1. Output ONLY valid JSON matching the schema above
-2. Do NOT include any explanatory text before or after the JSON
-3. Do NOT wrap the JSON in markdown code blocks or backticks
-4. Ensure all required fields are present
-5. Use null for missing optional fields
-6. Use proper JSON syntax: double quotes for strings, no trailing commas
+RULES: Output ONLY valid JSON. No markdown, no backticks, no extra text."""
 
-Your JSON response:"""
-        
-        # Try Gemini Flash first (primary)
+        # Shuffle agent models so each call uses a random one
+        models_to_try = random.sample(AGENT_MODELS, len(AGENT_MODELS))
+
+        for model_name in models_to_try:
+            try:
+                llm = _make_model(model_name).with_structured_output(schema_cls)
+                result = await llm.ainvoke(prompt)
+                print(f"✓ Extraction successful [{model_name}]")
+                return result
+            except Exception as e:
+                print(f"✗ {model_name} extraction failed: {e}")
+
+        # OpenRouter free fallback
         try:
-            llm = _make_gemini_flash().with_structured_output(schema_cls)
-            result = await llm.ainvoke(prompt)
-            print(f"✓ Gemini Flash extraction successful")
-            return result
-        except Exception as e:
-            print(f"Gemini Flash extraction failed: {e}. Trying Nemotron...")
-
-        # Fallback to Nemotron with enhanced prompt
-        try:
-            llm = _make_nemotron().with_structured_output(schema_cls)
+            llm = _make_openrouter_fallback().with_structured_output(schema_cls)
             result = await llm.ainvoke(json_prompt)
-            print(f"✓ Nemotron extraction successful")
+            print(f"✓ Extraction successful [openrouter-llama]")
             return result
         except Exception as e:
-            print(f"Nemotron extraction failed: {e}. Trying Gemini Pro...")
+            print(f"✗ OpenRouter fallback failed: {e}")
 
-        # Last resort: Gemini Pro
-        llm = _make_gemini_pro().with_structured_output(schema_cls)
+        # Last resort: Gemini 2.5 Pro
+        llm = _make_model(FALLBACK_MODEL).with_structured_output(schema_cls)
         result = await llm.ainvoke(prompt)
-        print(f"✓ Gemini Pro extraction successful")
+        print(f"✓ Extraction successful [{FALLBACK_MODEL}]")
         return result
 
     async def invoke_synthesis(self, prompt: str) -> str:
-        # Try Gemini Flash first (primary)
+        # Shuffle synthesis models so each call uses a random one
+        models_to_try = random.sample(SYNTHESIS_MODELS, len(SYNTHESIS_MODELS))
+
+        for model_name in models_to_try:
+            try:
+                res = await _make_model(model_name).ainvoke(prompt)
+                print(f"✓ Synthesis successful [{model_name}]")
+                return res.content
+            except Exception as e:
+                print(f"✗ {model_name} synthesis failed: {e}")
+
+        # OpenRouter free fallback
         try:
-            res = await _make_gemini_flash().ainvoke(prompt)
-            print(f"✓ Gemini Flash synthesis successful")
+            res = await _make_openrouter_fallback().ainvoke(prompt)
+            print(f"✓ Synthesis successful [openrouter-llama]")
             return res.content
         except Exception as e:
-            print(f"Gemini Flash synthesis failed: {e}. Falling back to Nemotron...")
+            print(f"✗ OpenRouter synthesis fallback failed: {e}")
 
-        # Fallback to Nemotron
-        try:
-            res = await _make_nemotron().ainvoke(prompt)
-            print(f"✓ Nemotron synthesis successful")
-            return res.content
-        except Exception as e:
-            print(f"Nemotron synthesis failed: {e}. Falling back to Gemini Pro...")
-
-        # Last resort: Gemini Pro
-        res = await _make_gemini_pro().ainvoke(prompt)
-        print(f"✓ Gemini Pro synthesis successful")
+        # Last resort: Gemini 2.5 Pro
+        res = await _make_model(FALLBACK_MODEL).ainvoke(prompt)
+        print(f"✓ Synthesis successful [{FALLBACK_MODEL}]")
         return res.content
 
 
-# Single shared instance — but because every method call creates fresh LangChain
-# model objects, switching event loops is no longer a problem.
 _router = LLMRouter()
 
 def get_router() -> LLMRouter:
